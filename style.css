@@ -207,7 +207,7 @@ aside.right {
 
 .cats label {
   display: grid;
-  grid-template-columns: auto 1fr auto;
+  grid-template-columns: auto auto 1fr auto;
   gap: 10px;
   align-items: center;
   padding: 8px 10px;
@@ -216,6 +216,14 @@ aside.right {
   cursor: pointer;
   user-select: none;
   font-size: 12px;
+}
+
+.catColor {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  display: inline-block;
+  border: 1px solid rgba(255, 255, 255, 0.35);
 }
 
 .cats input {

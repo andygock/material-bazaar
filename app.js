@@ -34,6 +34,7 @@
     shipM3: 0,
     cats: new Set(),
     hoverId: null,
+    highlightId: null,
     zoomT: d3.zoomIdentity,
   };
 
@@ -150,12 +151,16 @@
         requestRedraw();
         renderBestList();
       });
+      const dot = document.createElement("span");
+      dot.className = "catColor";
+      dot.style.backgroundColor = colourByCat(c);
       const span = document.createElement("span");
       span.textContent = c;
       const b = document.createElement("span");
       b.className = "badge";
       b.textContent = String(counts.get(c) || 0);
       lab.appendChild(cb);
+      lab.appendChild(dot);
       lab.appendChild(span);
       lab.appendChild(b);
       els.catBox.appendChild(lab);
@@ -318,6 +323,17 @@
       item.appendChild(head);
       item.appendChild(meta);
       item.appendChild(btns);
+
+      item.addEventListener("pointerenter", () => {
+        state.highlightId = d.id;
+        requestRedraw();
+      });
+      item.addEventListener("pointerleave", () => {
+        if (state.highlightId === d.id) {
+          state.highlightId = null;
+          requestRedraw();
+        }
+      });
 
       els.bestList.appendChild(item);
     }
@@ -672,6 +688,14 @@
           ? "rgba(255,255,255,0.65)"
           : "rgba(255,255,255,0.12)";
         ctx.stroke();
+
+        if (state.highlightId === d.id) {
+          ctx.lineWidth = 2.6;
+          ctx.strokeStyle = "rgba(255,255,255,0.85)";
+          ctx.beginPath();
+          ctx.arc(xx, yy, r + 4, 0, Math.PI * 2);
+          ctx.stroke();
+        }
       }
 
       ctx.restore();
