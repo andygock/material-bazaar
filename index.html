@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Material Bazaar - Interactive Material Selection Tool</title>
+
+    <!-- SEO Meta Tags -->
+    <meta
+      name="description"
+      content="Interactive material selection tool for engineering applications. Compare materials by density, cost, and stiffness with zoomable scatter plots and constraint filtering."
+    />
+    <meta
+      name="keywords"
+      content="material selection, engineering materials, density, stiffness, cost comparison, interactive visualization, scatter plot, materials database"
+    />
+    <meta name="author" content="Andy Gock" />
+
+    <!-- Open Graph Meta Tags -->
+    <meta
+      property="og:title"
+      content="Material Bazaar - Interactive Material Selection Tool"
+    />
+    <meta
+      property="og:description"
+      content="Explore and compare engineering materials with interactive scatter plots. Filter by constraints like budget, density, and stiffness."
+    />
+    <meta property="og:type" content="website" />
+    <meta
+      property="og:url"
+      content="https://github.com/andygock/material-bazaar"
+    />
+
+    <!-- Twitter Card Meta Tags -->
+    <meta name="twitter:card" content="summary" />
+    <meta
+      name="twitter:title"
+      content="Material Bazaar - Interactive Material Selection Tool"
+    />
+    <meta
+      name="twitter:description"
+      content="Interactive tool for comparing engineering materials by density, cost, and stiffness."
+    />
+
+    <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+    <script src="https://cdn.jsdelivr.net/npm/p5@1.11.7/lib/p5.min.js"></script>
+
+    <link rel="stylesheet" href="style.css" />
+  </head>
+
+  <body>
+    <div class="app">
+      <header>
+        <div class="title">
+          <h1>Material Bazaar</h1>
+          <div class="sub">
+            Canvas-rendered scatter with D3 zoom math. Axis ticks always rescale
+            with pan and zoom.
+            <a href="https://github.com/andygock/material-bazaar"
+              >Source on GitHub</a
+            >.
+          </div>
+        </div>
+
+        <div class="top-controls">
+          <div class="chip">
+            <label for="q">Search</label>
+            <input
+              id="q"
+              type="search"
+              placeholder="e.g. aluminium, PLA, concrete"
+              autocomplete="off"
+            />
+          </div>
+
+          <div class="chip">
+            <label for="mode">Y axis</label>
+            <select id="mode">
+              <option value="unit">Unit cost (USD/kg)</option>
+              <option value="landed">Landed cost (USD/kg incl shipping)</option>
+              <option value="func">Cost per stiffness (USD per GPa·kg)</option>
+            </select>
+          </div>
+
+          <div class="chip">
+            <button id="resetView" title="Reset zoom and pan">
+              Reset view
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <main>
+        <aside>
+          <div class="panel">
+            <h2>Constraints recipe</h2>
+
+            <div class="row">
+              <div>
+                <div class="lbl">Minimum stiffness (Young’s modulus)</div>
+                <div class="hint">
+                  Materials below this E are de-emphasised.
+                </div>
+              </div>
+              <div style="display: grid; justify-items: end; gap: 6px">
+                <input
+                  id="minE"
+                  type="range"
+                  min="0"
+                  max="500"
+                  step="1"
+                  value="2"
+                />
+                <div class="badge"><span id="minEVal"></span> GPa</div>
+              </div>
+            </div>
+
+            <div class="row">
+              <div>
+                <div class="lbl">Maximum density</div>
+                <div class="hint">Upper limit for mass-sensitive designs.</div>
+              </div>
+              <div style="display: grid; justify-items: end; gap: 6px">
+                <input
+                  id="maxRho"
+                  type="range"
+                  min="50"
+                  max="21000"
+                  step="10"
+                  value="21000"
+                />
+                <div class="badge"><span id="maxRhoVal"></span> kg/m³</div>
+              </div>
+            </div>
+
+            <div class="row">
+              <div>
+                <div class="lbl">Budget (per kg)</div>
+                <div class="hint">
+                  Applied to the active Y-axis interpretation.
+                </div>
+              </div>
+              <div style="display: grid; justify-items: end; gap: 6px">
+                <input
+                  id="budget"
+                  type="range"
+                  min="0.05"
+                  max="2000"
+                  step="0.05"
+                  value="50"
+                />
+                <div class="badge"><span id="budgetVal"></span> USD/kg</div>
+              </div>
+            </div>
+
+            <div class="row">
+              <div>
+                <div class="lbl">Scoring bias: stiffness vs cheapness</div>
+                <div class="hint">
+                  Higher values favour stiffness more strongly.
+                </div>
+              </div>
+              <div style="display: grid; justify-items: end; gap: 6px">
+                <input
+                  id="bias"
+                  type="range"
+                  min="0"
+                  max="100"
+                  step="1"
+                  value="55"
+                />
+                <div class="badge"><span id="biasVal"></span>%</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <h2>Delivered cost model</h2>
+
+            <div class="row">
+              <div>
+                <div class="lbl">Shipping per kg</div>
+                <div class="hint">Adds to USD/kg for all materials.</div>
+              </div>
+              <div style="display: grid; justify-items: end; gap: 6px">
+                <input
+                  id="shipKg"
+                  type="range"
+                  min="0"
+                  max="50"
+                  step="0.1"
+                  value="0"
+                />
+                <div class="badge"><span id="shipKgVal"></span> USD/kg</div>
+              </div>
+            </div>
+
+            <div class="row">
+              <div>
+                <div class="lbl">Shipping per m³</div>
+                <div class="hint">
+                  Volumetric freight translated into USD/kg via density.
+                </div>
+              </div>
+              <div style="display: grid; justify-items: end; gap: 6px">
+                <input
+                  id="shipM3"
+                  type="range"
+                  min="0"
+                  max="1000"
+                  step="1"
+                  value="0"
+                />
+                <div class="badge"><span id="shipM3Val"></span> USD/m³</div>
+              </div>
+            </div>
+
+            <div class="footerNote">
+              Landed cost = unit cost + ship/kg + (ship/m³ ÷ density).
+            </div>
+          </div>
+
+          <div class="panel">
+            <h2>Families</h2>
+            <div
+              id="catBox"
+              class="cats"
+              aria-label="Material families filter"
+            ></div>
+          </div>
+
+          <div class="panel">
+            <h2>How to navigate</h2>
+            <div class="footerNote">
+              <div>Mouse wheel: zoom</div>
+              <div>Drag: pan</div>
+              <div>Hover points: tooltip</div>
+              <div>Reset view: return to defaults</div>
+            </div>
+          </div>
+        </aside>
+
+        <section class="vizWrap" aria-label="Material scatter visualisation">
+          <div id="canvasHost"></div>
+          <div id="tip" class="tooltip" role="status" aria-live="polite"></div>
+        </section>
+
+        <aside class="right">
+          <div class="panel">
+            <h2>Best picks (editable)</h2>
+            <div class="footerNote">
+              Click a pick to edit its price, density, or modulus. Changes
+              propagate instantly.
+            </div>
+          </div>
+          <div class="panel">
+            <div id="bestList" class="table"></div>
+          </div>
+        </aside>
+      </main>
+    </div>
+
+    <script src="materials.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
