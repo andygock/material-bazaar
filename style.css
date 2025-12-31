@@ -274,8 +274,40 @@ aside.right {
 }
 
 .table {
-  display: grid;
-  gap: 8px;
+  /* Container for the best picks table */
+}
+
+.bestPicksTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+  font-family: var(--mono);
+}
+
+.bestPicksTable th {
+  text-align: left;
+  padding: 4px 6px;
+  border-bottom: 1px solid var(--line);
+  color: var(--muted);
+  font-weight: 650;
+}
+
+.bestPicksTable td {
+  padding: 4px 6px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.bestPicksTable tbody tr:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.familyColor {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 6px;
+  vertical-align: middle;
 }
 
 .matItem {

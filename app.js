@@ -270,129 +270,71 @@
       return;
     }
 
+    const table = document.createElement("table");
+    table.className = "bestPicksTable";
+
+    const thead = document.createElement("thead");
+    const headerRow = document.createElement("tr");
+    ["Material", "Score", "ρ (kg/m³)", "E (GPa)", "Cost (USD/kg)"].forEach(
+      (text) => {
+        const th = document.createElement("th");
+        th.textContent = text;
+        headerRow.appendChild(th);
+      }
+    );
+    thead.appendChild(headerRow);
+    table.appendChild(thead);
+
+    const tbody = document.createElement("tbody");
     for (const { d, s } of picks) {
-      const item = document.createElement("div");
-      item.className = "matItem";
+      const row = document.createElement("tr");
 
-      const head = document.createElement("div");
-      head.className = "head";
+      // Material column with color circle
+      const matCell = document.createElement("td");
+      const colorCircle = document.createElement("span");
+      colorCircle.className = "familyColor";
+      colorCircle.style.backgroundColor = colourByCat(d.cat);
+      const nameSpan = document.createElement("span");
+      nameSpan.textContent = d.name;
+      matCell.appendChild(colorCircle);
+      matCell.appendChild(nameSpan);
+      row.appendChild(matCell);
 
-      const name = document.createElement("div");
-      name.className = "name";
-      name.textContent = d.name;
+      // Score
+      const scoreCell = document.createElement("td");
+      scoreCell.textContent = s.toFixed(3);
+      row.appendChild(scoreCell);
 
-      const scoreEl = document.createElement("div");
-      scoreEl.className = "score";
-      scoreEl.textContent = "score " + s.toFixed(3);
+      // Density
+      const rhoCell = document.createElement("td");
+      rhoCell.textContent = fmt.rho(d.rho);
+      row.appendChild(rhoCell);
 
-      head.appendChild(name);
-      head.appendChild(scoreEl);
+      // E
+      const eCell = document.createElement("td");
+      eCell.textContent = fmt.gpa(d.E);
+      row.appendChild(eCell);
 
-      const meta = document.createElement("div");
-      meta.className = "meta";
+      // Cost
+      const costCell = document.createElement("td");
+      costCell.textContent = fmt.usd(yValue(d));
+      row.appendChild(costCell);
 
-      const y = yValue(d);
-      const landed = landedUsdKg(d);
-      const perStiff = landed / Math.max(1e-6, d.E);
-
-      meta.innerHTML = `
-              <div>ρ ${fmt.rho(d.rho)} kg/m³</div>
-              <div>E ${fmt.gpa(d.E)} GPa</div>
-              <div>${escapeHtml(yLabel())}: ${fmt.usd(y)}</div>
-              <div>Landed: ${fmt.usd(landed)} USD/kg</div>
-              <div>Landed/(E): ${fmt.usd(perStiff)} USD/(GPa·kg)</div>
-            `;
-
-      const btns = document.createElement("div");
-      btns.className = "miniBtns";
-
-      const edit = document.createElement("button");
-      edit.type = "button";
-      edit.textContent = "Edit";
-      edit.addEventListener("click", () => {
-        const existing = item.querySelector(".edit");
-        if (existing) {
-          existing.remove();
-          return;
-        }
-        item.appendChild(buildEditor(d));
-      });
-
-      btns.appendChild(edit);
-
-      item.appendChild(head);
-      item.appendChild(meta);
-      item.appendChild(btns);
-
-      item.addEventListener("pointerenter", () => {
+      row.addEventListener("pointerenter", () => {
         state.highlightId = d.id;
         requestRedraw();
       });
-      item.addEventListener("pointerleave", () => {
+      row.addEventListener("pointerleave", () => {
         if (state.highlightId === d.id) {
           state.highlightId = null;
           requestRedraw();
         }
       });
 
-      els.bestList.appendChild(item);
+      tbody.appendChild(row);
     }
-  }
-
-  function buildEditor(d) {
-    const wrap = document.createElement("div");
-    wrap.className = "edit";
-
-    const mkRow = (label, value, onCommit) => {
-      const r = document.createElement("div");
-      r.className = "editRow";
-      const s = document.createElement("span");
-      s.textContent = label;
-      const i = document.createElement("input");
-      i.type = "text";
-      i.value = value;
-      i.addEventListener("keydown", (ev) => {
-        if (ev.key === "Enter") onCommit(i.value);
-      });
-      i.addEventListener("blur", () => onCommit(i.value));
-      r.appendChild(s);
-      r.appendChild(i);
-      return r;
-    };
-
-    wrap.appendChild(
-      mkRow("Unit USD/kg", String(d.usdkg), (v) => {
-        const x = Number(v);
-        if (isFinite(x) && x > 0) d.usdkg = x;
-        requestRedraw();
-        renderBestList();
-      })
-    );
-
-    wrap.appendChild(
-      mkRow("Density kg/m³", String(d.rho), (v) => {
-        const x = Number(v);
-        if (isFinite(x) && x > 0) d.rho = x;
-        requestRedraw();
-        renderBestList();
-      })
-    );
-
-    wrap.appendChild(
-      mkRow("E (GPa)", String(d.E), (v) => {
-        const x = Number(v);
-        if (isFinite(x) && x > 0) d.E = x;
-        requestRedraw();
-        renderBestList();
-      })
-    );
-
-    const hint = document.createElement("div");
-    hint.className = "footerNote";
-    hint.textContent = "Edits affect the plot immediately.";
-    wrap.appendChild(hint);
-
-    return wrap;
+    table.appendChild(tbody);
+    els.bestList.appendChild(table);
   }
 
   buildCategoryUI();

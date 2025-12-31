@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Material Bazaar - Interactive Material Selection Tool</title>
+    <link rel="icon" type="image/svg+xml" href="./icon.svg" />
 
     <!-- SEO Meta Tags -->
     <meta
@@ -45,14 +46,14 @@
     <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
     <script src="https://cdn.jsdelivr.net/npm/p5@1.11.7/lib/p5.min.js"></script>
 
-    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="./style.css" />
   </head>
 
   <body>
     <div class="app">
       <header>
         <div class="title">
-          <h1>Material Bazaar</h1>
+          <h1>🔬 Material Bazaar</h1>
           <div class="sub">
             Canvas-rendered scatter with D3 zoom math.
             <a href="https://github.com/andygock/material-bazaar"
@@ -246,10 +247,9 @@
 
         <aside class="right">
           <div class="panel">
-            <h2>Best picks (editable)</h2>
+            <h2>Best picks</h2>
             <div class="footerNote">
-              Click a pick to edit its price, density, or modulus. Changes
-              propagate instantly.
+              Top materials ranked by score under current constraints.
             </div>
           </div>
           <div class="panel">
@@ -259,7 +259,7 @@
       </main>
     </div>
 
-    <script src="materials.js"></script>
-    <script src="app.js"></script>
+    <script src="./materials.js"></script>
+    <script src="./app.js"></script>
   </body>
 </html>
